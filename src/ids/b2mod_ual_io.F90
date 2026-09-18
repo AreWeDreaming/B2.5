@@ -11816,7 +11816,8 @@ contains
             else if (nesepm_sol.gt.0.0_R8 .or. volrec_sol.gt.0.0_R8 .or. &
               & ndes_sol.gt.0.0_R8 .or. nepedm_sol.gt.0.0_R8) then
               gmid = gmid + gpff
-            else if (feedback_strata(latmscl(iatm)-1).eq.istrai.and.na_feedback_ib(latmscl(iatm)-1).gt.0) then
+            else if (feedback_strata(latmscl(iatm)-1).eq.istrai .and. &
+                &    na_feedback_ib(latmscl(iatm)-1).gt.0) then
               ib = na_feedback_ib(latmscl(iatm)-1)
               ireg = region(bc_list_x(1,ib),bc_list_y(1,ib),0)
               at_top = .false.
