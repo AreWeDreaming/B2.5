@@ -114,7 +114,13 @@
 *     ..-ub_old**2 piece in the rob-weighted constant slot (2) and the
 *     ..+2*ub_old*ua piece in the rob*ua-weighted slot (3); mb*nb=rob
 *     ..is supplied by the caller's reconstruction, so it must not be
-*     ..included again here.
+*     ..included again here. The linear (slot-3) piece is only used
+*     ..when it is stabilising (<=0), matching the codebase invariant
+*     ..(enforced in b2urmo) that smb(:,:,3) must never be positive --
+*     ..this mirrors what the old one-sided ctcf=min(0,ctcfb) diagonal
+*     ..patch did, just routed through the smbcf(2:3) slots. When the
+*     ..derivative would destabilise (>0), fall back to the fully
+*     ..explicit constant-slot treatment for that cell.
         do iy = 0, ny-1
           do ix = 0, nx-1                                               !srv 26.11.02 {
             if(leftix(ix,iy).ne.-2 .and. rightix(ix,iy).ne.nx+1) then   !srv 22.07.05 {
@@ -123,8 +129,13 @@
      &                            wrk0(rightix(ix,iy),leftiy(ix,iy)))   !srv 22.07.05 {
               smbcf(ix,iy,0) = 0.0_R8
               smbcf(ix,iy,1) = 0.0_R8
-              smbcf(ix,iy,2) = -wrks(ix,iy)*ub(ix,iy)**2
-              smbcf(ix,iy,3) =  wrks(ix,iy)*2.0_R8*ub(ix,iy)
+              if (wrks(ix,iy)*ub(ix,iy).le.0.0_R8) then
+                smbcf(ix,iy,2) = -wrks(ix,iy)*ub(ix,iy)**2
+                smbcf(ix,iy,3) =  wrks(ix,iy)*2.0_R8*ub(ix,iy)
+              else
+                smbcf(ix,iy,2) =  wrks(ix,iy)*ub(ix,iy)**2
+                smbcf(ix,iy,3) =  0.0_R8
+              endif
               ctcf(ix,iy) = 0.0_R8                                      !srv 06.04.07 { now handled
 c                                                                        !  through smbcf(2:3) above,
 c                                                                        !  not the one-sided ctcf patch
@@ -161,8 +172,8 @@ c           ..else branch above, same as before)
         enddo
 
 *   .. compute smbcf
-*     ..Newton-linearise ub**2 as above (style=0 branch) instead of
-*     ..leaving it fully explicit in the constant slot
+*     ..Newton-linearise ub**2 as above (style=0 branch), clamped the
+*     ..same way to respect smb(:,:,3)<=0
         do iy = 0, ny-1
           do ix = 0, nx-1                                               !srv 26.11.02 {
             if(leftix(ix,iy).ne.-2 .and. rightix(ix,iy).ne.nx+1) then   !srv 22.07.05 {
@@ -171,8 +182,13 @@ c           ..else branch above, same as before)
      &                            wrk0(rightix(ix,iy),leftiy(ix,iy)))   !srv 22.07.05 {
               smbcf(ix,iy,0) = 0.0_R8
               smbcf(ix,iy,1) = 0.0_R8
-              smbcf(ix,iy,2) = -wrks(ix,iy)*ub(ix,iy)**2
-              smbcf(ix,iy,3) =  wrks(ix,iy)*2.0_R8*ub(ix,iy)
+              if (wrks(ix,iy)*ub(ix,iy).le.0.0_R8) then
+                smbcf(ix,iy,2) = -wrks(ix,iy)*ub(ix,iy)**2
+                smbcf(ix,iy,3) =  wrks(ix,iy)*2.0_R8*ub(ix,iy)
+              else
+                smbcf(ix,iy,2) =  wrks(ix,iy)*ub(ix,iy)**2
+                smbcf(ix,iy,3) =  0.0_R8
+              endif
               ctcf(ix,iy) = 0.0_R8                                      !srv 06.04.07 { now handled
 c                                                                        !  through smbcf(2:3) above
 
