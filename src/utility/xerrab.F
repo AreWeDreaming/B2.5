@@ -66,6 +66,6 @@
        goto 3
       endif
       call b25_mpi_stop
-      stop 'xerrab--error'
+      call abort() ! This will produce a traceback
 *     ------------------------------------------------------------------
       end subroutine xerrab
