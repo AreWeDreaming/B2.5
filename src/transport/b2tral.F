@@ -477,11 +477,11 @@
           enddo
         endif
       else
-        cvsahz_drho=0.0e0_R8
-        cvsa_drho=0.0e0_R8
+        cvsahz_drho=0.0_R8
+        cvsa_drho=0.0_R8
       endif
 *   ..add to previous contributions
-      ft = 4.0e0_R8/3.0e0_R8                                          !srv 16.10.17
+      ft = 4.0_R8/3.0_R8                                              !srv 16.10.17
       if (style.eq.1) then
        do is = 0, ns-1
         if (.not.is_neutral(is)) then
@@ -521,7 +521,7 @@
           if(.not.is_neutral(is)) then
            if(leftix(ix,iy).ne.-2) then
             cddi(ix,iy,0,is) =
-     &       +2.0e0_R8*(vol(leftix(ix,iy),leftiy(ix,iy))*
+     &       +2.0_R8*(vol(leftix(ix,iy),leftiy(ix,iy))*
      &         bzb(leftix(ix,iy),leftiy(ix,iy))
      &         +vol(ix,iy)*bzb(ix,iy))/
      &       ((hx(leftix(ix,iy),leftiy(ix,iy))+hx(ix,iy))*
@@ -530,7 +530,7 @@
            endif
            if(bottomiy(ix,iy).ne.-2) then
             cddi(ix,iy,1,is) =
-     &       2.0e0_R8*(vol(bottomix(ix,iy),bottomiy(ix,iy))*
+     &       2.0_R8*(vol(bottomix(ix,iy),bottomiy(ix,iy))*
      &         bzb(bottomix(ix,iy),bottomiy(ix,iy))
      &         +vol(ix,iy)*bzb(ix,iy))/
      &       ((hx(bottomix(ix,iy),bottomiy(ix,iy))+hx(ix,iy))*
@@ -543,7 +543,7 @@
 *   ..compute terms from diamagnetic parts for electrons               !som 03.11.21 {
          if(leftix(ix,iy).ne.-2) then
           cdde(ix,iy,0) =
-     &      +2.0e0_R8*(vol(leftix(ix,iy),leftiy(ix,iy))*
+     &      +2.0_R8*(vol(leftix(ix,iy),leftiy(ix,iy))*
      &       bzb(leftix(ix,iy),leftiy(ix,iy))
      &       +vol(ix,iy)*bzb(ix,iy))/
      &     ((hx(leftix(ix,iy),leftiy(ix,iy))+hx(ix,iy))*
@@ -551,7 +551,7 @@
          endif
          if(bottomiy(ix,iy).ne.-2) then
           cdde(ix,iy,1) =
-     &     2.0e0_R8*(vol(bottomix(ix,iy),bottomiy(ix,iy))*
+     &     2.0_R8*(vol(bottomix(ix,iy),bottomiy(ix,iy))*
      &       bzb(bottomix(ix,iy),bottomiy(ix,iy))
      &       +vol(ix,iy)*bzb(ix,iy))/
      &     ((hx(bottomix(ix,iy),bottomiy(ix,iy))+hx(ix,iy))*

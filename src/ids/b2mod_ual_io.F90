@@ -5435,10 +5435,18 @@ contains
                 &   val = edge_transport%model(1)%ggd( time_sind )%     &
                 &         electrons%energy%flux,                        &
                 &   value = totFace )
-            call write_cell_scalar( transport_grid,                     &
+            if (maxval(fllime).ne.minval(fllime)) then
+              call write_cell_scalar( transport_grid,                   &
                 &   scalar = edge_transport%model(1)%ggd( time_sind )%  &
                 &            electrons%energy%flux_limiter,             &
                 &   b2CellData = fllime )
+            else
+              tmpCv(:,:) = fllim_ke(:,:) * f_luc_ke(:,:)
+              call write_cell_scalar( transport_grid,                   &
+                &   scalar = edge_transport%model(1)%ggd( time_sind )%  &
+                &            electrons%energy%flux_limiter,             &
+                &   b2CellData = tmpCv )
+            end if
             tmpCv(:,:) = ( she(:,:,0) + she(:,:,1) * te(:,:) +          &
                 &          she(:,:,2) * ne(:,:) +                       &
                 &          she(:,:,3) * te(:,:) * ne(:,:) ) / vol(:,:)
@@ -5557,10 +5565,18 @@ contains
             call write_face_scalar( transport_grid,                     &
                 &   val = transport_ggd(1)%electrons%energy%flux,       &
                 &   value = totFace )
-            call write_cell_scalar( transport_grid,                     &
+            if (maxval(fllime).ne.minval(fllime)) then
+              call write_cell_scalar( transport_grid,                   &
                 &   scalar = transport_ggd(1)%                          &
                 &            electrons%energy%flux_limiter,             &
                 &   b2CellData = fllime )
+            else
+              tmpCv(:,:) = fllim_ke(:,:) * f_luc_ke(:,:)
+              call write_cell_scalar( transport_grid,                   &
+                &   scalar = transport_ggd(1)%                          &
+                &            electrons%energy%flux_limiter,             &
+                &   b2CellData = tmpCv )
+            end if
             tmpCv(:,:) = ( she(:,:,0) + she(:,:,1) * te(:,:) +          &
                 &          she(:,:,2) * ne(:,:) +                       &
                 &          she(:,:,3) * te(:,:) * ne(:,:) ) / vol(:,:)
@@ -5678,10 +5694,18 @@ contains
                 &   val = edge_transport%model(1)%ggd( time_sind )%     &
                 &         total_ion_energy%flux,                        &
                 &   value = totFace )
-            call write_cell_scalar( transport_grid,                     &
+            if (maxval(fllimi).ne.minval(fllimi)) then
+              call write_cell_scalar( transport_grid,                   &
                 &   scalar = edge_transport%model(1)%ggd( time_sind )%  &
                 &            total_ion_energy%flux_limiter,             &
                 &   b2CellData = fllimi )
+            else
+              tmpCv(:,:) = fllim_ki(:,:) * f_luc_ki(:,:)
+              call write_cell_scalar( transport_grid,                   &
+                &   scalar = edge_transport%model(1)%ggd( time_sind )%  &
+                &            total_ion_energy%flux_limiter,             &
+                &   b2CellData = tmpCv )
+            end if
             !! Ion energy sources
             tmpCv(:,:) = ( shi(:,:,0) + shi(:,:,1) * ti(:,:) +          &
                 &          shi(:,:,2) * ni(:,:,0) +                     &
@@ -5783,10 +5807,18 @@ contains
             call write_face_scalar( transport_grid,                   &
                 &   val = transport_ggd(1)%total_ion_energy%flux,     &
                 &   value = totFace )
-            call write_cell_scalar( transport_grid,                   &
+            if (maxval(fllimi).ne.minval(fllimi)) then
+              call write_cell_scalar( transport_grid,                 &
                 &   scalar = transport_ggd(1)%total_ion_energy%       &
                 &            flux_limiter,                            &
                 &   b2CellData = fllimi )
+            else
+              tmpCv(:,:) = fllim_ki(:,:) * f_luc_ki(:,:)
+              call write_cell_scalar( transport_grid,                 &
+                &   scalar = transport_ggd(1)%total_ion_energy%       &
+                &            flux_limiter,                            &
+                &   b2CellData = tmpCv )
+            end if
             !! Ion energy sources
             tmpCv(:,:) = ( shi(:,:,0) + shi(:,:,1) * ti(:,:) +        &
                 &          shi(:,:,2) * ni(:,:,0) +                   &
