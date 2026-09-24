@@ -49,22 +49,23 @@
 *.declarations
 
 *   ..local variables
-      integer ncall, n2, ix, iy, ireg, ileft, ibot, itop
+      integer ncall, n2, ix, iy, ireg, ileft, ibot, itop, ixb, iyb
       integer, save :: no_Ptncr_x_co = 0, no_Ptncr_y_co = 0           !srv 06.07.06
       integer, save :: style_b2mndt = 1                               !srv 07.07.21
       integer, save :: iout = 0                                       !srv 17.06.02
       real (kind=R8) ::
-     *  cfc0, t0, t1, csb, csb1
+     *  cfc0, aad0_boost0, t0, t1, csb, csb1
 #ifdef _OPENMP
-!$OMP THREADPRIVATE(ncall, cfc0, iout)
+!$OMP THREADPRIVATE(ncall, cfc0, aad0_boost0)
+!$OMP THREADPRIVATE(iout)
 !$OMP THREADPRIVATE(no_Ptncr_x_co, no_Ptncr_y_co)
 #endif
-      save ncall, cfc0
+      save ncall, cfc0, aad0_boost0
 *   ..procedures
       external xertst, ipgetr, sfill
       external b2xvsg, b2xvff, b2ux5p
 *   ..initialisation
-      data ncall/0/, cfc0/1.0_R8/
+      data ncall/0/, cfc0/1.0_R8/, aad0_boost0/0.0_R8/
 
 *-----------------------------------------------------------------------
 *.computation
@@ -76,6 +77,9 @@
       if (ncall.eq.0) then
        call ipgetr ('b2usmo_cfc0', cfc0)
        call xertst (0.0_R8.le.cfc0, 'faulty internal parameter cfc0')
+       call ipgetr ('b2usmo_aad0_boost0', aad0_boost0)                !xpb 20.09.21
+       call xertst (0.0_R8.le.aad0_boost0,
+     &  'faulty internal parameter aad0_boost0')
        call ipgeti ('b2tfnb_no_Ptncr_x', no_Ptncr_x_co)               !srv 06.07.06
        call ipgeti ('b2tfnb_no_Ptncr_y', no_Ptncr_y_co)               !srv 06.07.06
        call ipgeti ('b2mndt_style', style_b2mndt)                     !srv 07.07.21
@@ -128,6 +132,8 @@
          aa5(ix,iy,0) = aad0(ix,iy)
          if (style_b2mndt.lt.2) aa5(ix,iy,0) = aa5(ix,iy,0)+
      &    abs(resmb(ix,iy))/(rxg*csb1)
+         if (aad0_boost0.gt.0.0_R8) aa5(ix,iy,0) = aa5(ix,iy,0)+      !xpb 20.09.21
+     &    abs(resmb(ix,iy))/csb1*aad0_boost0/(csb*rob(ix,iy))         !xpb 20.09.21
         else
          aa5(ix,iy,0) = 1.0_R8
          aad0(ix,iy) = 0.0_R8
@@ -144,7 +150,7 @@ csw 18feb2014 corrected BCs (SOLPS4)
         endif
 
         ireg = region(ix,iy,0)
-        if(leftix(ix,iy).eq.-2) then
+        if(leftix(ix,iy).eq.-2 .or. .not.solvereg(ireg)) then
          aa5(ix,iy,-1) = 0.0_R8
         else
          if(no_Ptncr_x_co.eq.0) then                                  !sv 06.07.06 {
@@ -181,7 +187,7 @@ csw 18feb2014 corrected BCs (SOLPS4)
         endif
 
         ireg = region(ix,iy,0)
-        if(bottomiy(ix,iy).eq.-2) then
+        if(bottomiy(ix,iy).eq.-2 .or. .not.solvereg(ireg)) then
          aa5(ix,iy,-2) = 0.0_R8
         else
          if(no_Ptncr_y_co.eq.0) then                                 !srv 06.07.06 {
@@ -194,13 +200,25 @@ csw 18feb2014 corrected BCs (SOLPS4)
           t1 = -flcb(ix,iy,1)/2.0_R8 - cvsb(ix,iy,1)
          endif                                                        !srv 06.07.06 }
           ibot = region(bottomix(ix,iy),bottomiy(ix,iy),0)
-          if (solvereg(ibot))
-     >     aa5(bottomix(ix,iy),bottomiy(ix,iy),2) = t0
+          ixb = bottomix(ix,iy)
+          iyb = bottomiy(ix,iy)
+          if (solvereg(ibot)) then
+           if (topix(ixb,iyb).eq.ix .and. topiy(ixb,iyb).eq.iy) then
+c           ..ordinary case: target's own top pointer reciprocates
+            aa5(ixb,iyb,2) = t0
+            aa5(ixb,iyb,0) = aa5(ixb,iyb,0)-t1
+           else if (bottomix(ixb,iyb).eq.ix .and.
+     &              bottomiy(ixb,iyb).eq.iy) then
+c           ..limiter-topology mutual-bottom pairing: target calls US
+c           ..its bottom neighbour too, so route into ITS bottom slot
+            aa5(ixb,iyb,-2) = t0
+            aa5(ixb,iyb,0)  = aa5(ixb,iyb,0)-t1
+           endif
+c          ..else: connectivity isn't reciprocal at all; skip rather
+c          ..than write into an unrelated slot
+          endif
           if (solvereg(ireg))
      >     aa5(ix,iy,0) = aa5(ix,iy,0)-t0
-          if (solvereg(ibot))
-     >     aa5(bottomix(ix,iy),bottomiy(ix,iy),0) =
-     &              aa5(bottomix(ix,iy),bottomiy(ix,iy),0)-t1
           if (solvereg(ireg))
      >     aa5(ix,iy,-2) = t1
 cxpb

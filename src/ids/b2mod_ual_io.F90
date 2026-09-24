@@ -1636,7 +1636,7 @@ contains
             end do
           end do
           if (nesum.gt.0.0_IDS_real) frac = frac / nesum
-          select case (is_codes(eb2spcr(is)))
+          select case (is_codes(eb2spcr(i)))
           case ('H')
             call write_sourced_constant_2( summary%composition%hydrogen, frac )
           case ('D')
@@ -3825,7 +3825,7 @@ contains
                  &  sources_ggd(i)%neutral( j )%element(1) )
                   sources_ggd(i)%neutral( j )%name = species_list( js )
                   allocate( sources_ggd(i)%neutral( j )%state(1) )
-                  allocate( sources_ggd(i)%neutral( j )%state(1) )
+                  allocate( sources_ggd(i)%neutral( j )%state(1)%name(1) )
                   sources_ggd(i)%neutral( j )%state(1)%name = spclabel
                   call fill_atom_neutral_type( js, &
                     &  sources_ggd(i)%neutral( j )%state(1)%neutral_type )
@@ -5435,10 +5435,18 @@ contains
                 &   val = edge_transport%model(1)%ggd( time_sind )%     &
                 &         electrons%energy%flux,                        &
                 &   value = totFace )
-            call write_cell_scalar( transport_grid,                     &
+            if (maxval(fllime).ne.minval(fllime)) then
+              call write_cell_scalar( transport_grid,                   &
                 &   scalar = edge_transport%model(1)%ggd( time_sind )%  &
                 &            electrons%energy%flux_limiter,             &
                 &   b2CellData = fllime )
+            else
+              tmpCv(:,:) = fllim_ke(:,:) * f_luc_ke(:,:)
+              call write_cell_scalar( transport_grid,                   &
+                &   scalar = edge_transport%model(1)%ggd( time_sind )%  &
+                &            electrons%energy%flux_limiter,             &
+                &   b2CellData = tmpCv )
+            end if
             tmpCv(:,:) = ( she(:,:,0) + she(:,:,1) * te(:,:) +          &
                 &          she(:,:,2) * ne(:,:) +                       &
                 &          she(:,:,3) * te(:,:) * ne(:,:) ) / vol(:,:)
@@ -5557,10 +5565,18 @@ contains
             call write_face_scalar( transport_grid,                     &
                 &   val = transport_ggd(1)%electrons%energy%flux,       &
                 &   value = totFace )
-            call write_cell_scalar( transport_grid,                     &
+            if (maxval(fllime).ne.minval(fllime)) then
+              call write_cell_scalar( transport_grid,                   &
                 &   scalar = transport_ggd(1)%                          &
                 &            electrons%energy%flux_limiter,             &
                 &   b2CellData = fllime )
+            else
+              tmpCv(:,:) = fllim_ke(:,:) * f_luc_ke(:,:)
+              call write_cell_scalar( transport_grid,                   &
+                &   scalar = transport_ggd(1)%                          &
+                &            electrons%energy%flux_limiter,             &
+                &   b2CellData = tmpCv )
+            end if
             tmpCv(:,:) = ( she(:,:,0) + she(:,:,1) * te(:,:) +          &
                 &          she(:,:,2) * ne(:,:) +                       &
                 &          she(:,:,3) * te(:,:) * ne(:,:) ) / vol(:,:)
@@ -5678,10 +5694,18 @@ contains
                 &   val = edge_transport%model(1)%ggd( time_sind )%     &
                 &         total_ion_energy%flux,                        &
                 &   value = totFace )
-            call write_cell_scalar( transport_grid,                     &
+            if (maxval(fllimi).ne.minval(fllimi)) then
+              call write_cell_scalar( transport_grid,                   &
                 &   scalar = edge_transport%model(1)%ggd( time_sind )%  &
                 &            total_ion_energy%flux_limiter,             &
                 &   b2CellData = fllimi )
+            else
+              tmpCv(:,:) = fllim_ki(:,:) * f_luc_ki(:,:)
+              call write_cell_scalar( transport_grid,                   &
+                &   scalar = edge_transport%model(1)%ggd( time_sind )%  &
+                &            total_ion_energy%flux_limiter,             &
+                &   b2CellData = tmpCv )
+            end if
             !! Ion energy sources
             tmpCv(:,:) = ( shi(:,:,0) + shi(:,:,1) * ti(:,:) +          &
                 &          shi(:,:,2) * ni(:,:,0) +                     &
@@ -5783,10 +5807,18 @@ contains
             call write_face_scalar( transport_grid,                   &
                 &   val = transport_ggd(1)%total_ion_energy%flux,     &
                 &   value = totFace )
-            call write_cell_scalar( transport_grid,                   &
+            if (maxval(fllimi).ne.minval(fllimi)) then
+              call write_cell_scalar( transport_grid,                 &
                 &   scalar = transport_ggd(1)%total_ion_energy%       &
                 &            flux_limiter,                            &
                 &   b2CellData = fllimi )
+            else
+              tmpCv(:,:) = fllim_ki(:,:) * f_luc_ki(:,:)
+              call write_cell_scalar( transport_grid,                 &
+                &   scalar = transport_ggd(1)%total_ion_energy%       &
+                &            flux_limiter,                            &
+                &   b2CellData = tmpCv )
+            end if
             !! Ion energy sources
             tmpCv(:,:) = ( shi(:,:,0) + shi(:,:,1) * ti(:,:) +        &
                 &          shi(:,:,2) * ni(:,:,0) +                   &
@@ -11816,7 +11848,8 @@ contains
             else if (nesepm_sol.gt.0.0_R8 .or. volrec_sol.gt.0.0_R8 .or. &
               & ndes_sol.gt.0.0_R8 .or. nepedm_sol.gt.0.0_R8) then
               gmid = gmid + gpff
-            else if (feedback_strata(latmscl(iatm)-1).eq.istrai) then
+            else if (feedback_strata(latmscl(iatm)-1).eq.istrai .and. &
+                &    na_feedback_ib(latmscl(iatm)-1).gt.0) then
               ib = na_feedback_ib(latmscl(iatm)-1)
               ireg = region(bc_list_x(1,ib),bc_list_y(1,ib),0)
               at_top = .false.
